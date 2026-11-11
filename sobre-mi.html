@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sobre mí — Melaza Studio</title>
+  <link rel="icon" type="image/png" href="favicon-claro.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="favicon-oscuro.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Kalnia:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="pagina.css">
+  <style>
+    /* ==========================================================================
+       SOBRE MÍ — "ficha de la artista" con scroll vertical
+       Inspirada en el CV: arco con foto, nombre grande, secciones tipo dato.
+       ========================================================================== */
+    body.artist { color: #1b1b1b; }
+    /* La cabecera queda sobre fondos claros y rojos: una banda de papel la mantiene legible */
+    body.artist header { background: transparent; }   /* la barra de navegación no lleva fondo */
+    /* Sobre el rojo, la barra de navegación (logo, menú e interruptor de idioma) pasa a blanco */
+    header.on-red .brand .logo, header.on-red .brand .tagline, header.on-red nav a, header.on-red nav a[aria-current="page"] { color: #fff; }
+    body.artist main { display: block; padding: 0; }
+    .a-wrap { width: min(1180px, 100% - 10vw); margin-inline: auto; }
+    .a-label { display: block; font-size: .8rem; letter-spacing: .02em; color: var(--sel); margin-bottom: .9rem; }
+    .on-paper .a-label { color: var(--primary-hover); }
+    .a-h2 { font-family: var(--font-title); font-weight: 600; font-size: clamp(1.5rem, 2.6vw, 2.2rem); line-height: 1.12; }
+
+    /* ---- 1. Portada: nombre + arco con foto ---- */
+    .a-hero { padding: calc(var(--header-h) + clamp(2rem, 6vh, 4rem)) 0 clamp(3rem, 8vh, 6rem); }
+    .a-hero .a-wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: 5vw; align-items: center; }
+    .a-hero .a-label { color: var(--primary-hover); font-size: .9rem; }
+    .a-hero h1 { font-family: var(--font-title); font-style: italic; font-weight: 400; font-size: clamp(3.2rem, 8.2vw, 7.4rem); line-height: .95; color: var(--primary); letter-spacing: -.01em; }
+    .a-hero .sub { font-family: var(--font-title); font-weight: 600; font-size: clamp(1.15rem, 2vw, 1.7rem); line-height: 1.25; color: #1b1b1b; margin-top: 1.6rem; }
+    .a-hero .sub span { color: var(--primary); }
+    .a-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2.4rem; }
+    .a-btn { display: inline-flex; align-items: center; gap: .7rem; font: 600 .92rem var(--font-body); text-decoration: none; border: 0; border-radius: 999px; padding: 1rem 1.7rem; cursor: pointer; transition: background .3s, color .3s, transform .3s cubic-bezier(.2,.8,.2,1); }
+    .a-btn i { font-style: normal; transition: transform .3s; }
+    .a-btn.solid { background: var(--primary); color: var(--paper); }
+    .a-btn.soft { background: rgba(96,15,8,.09); color: var(--primary); }
+    .a-btn.light { background: var(--paper); color: var(--primary); }
+    .a-btn:hover, .a-btn:focus-visible { transform: translateY(-2px); outline: none; }
+    .a-btn.solid:hover, .a-btn.solid:focus-visible { background: var(--primary-hover); }
+    .a-btn.soft:hover, .a-btn.soft:focus-visible { background: rgba(96,15,8,.17); }
+    .a-btn.light:hover, .a-btn.light:focus-visible { background: var(--sel); color: var(--primary-deep); }
+    .a-btn:hover i { transform: translateY(2px); }
+
+    .a-photo { position: relative; justify-self: end; width: min(100%, 400px); }
+    .a-photo::before { content: ""; position: absolute; inset: 7% -7% -5% 9%; background: var(--primary); border-radius: 999px 999px 36px 36px; }
+    .a-photo .arc { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; position: relative; aspect-ratio: 3 / 4.15; border-radius: 999px 999px 36px 36px; overflow: hidden; background: var(--primary-deep); box-shadow: 0 24px 50px rgba(63,10,5,.28); }
+    .a-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 52%; display: block; }
+
+    /* ---- Bandas rojas ---- */
+    .a-band { background: var(--primary); color: var(--paper); border-radius: clamp(28px, 5vw, 72px); margin-inline: 1.2vw; padding: clamp(3rem, 8vh, 5.5rem) 0; }
+
+    /* ---- 2. Datos de la artista ---- */
+    .a-data-head h2.a-label { margin-bottom: 0; font-weight: 400; }
+    .a-data-head { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.4rem; flex-wrap: wrap; }
+    /* Ficha: jerarquía por tamaño y espacio (sin cajas para todo) */
+    .a-sheet { display: grid; grid-template-columns: minmax(240px, .8fr) 1.4fr; gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+    .a-name { font-family: var(--font-title); font-style: italic; font-weight: 400; font-size: clamp(1.5rem, 2.4vw, 2.1rem); line-height: 1.1; }
+    .a-loc { margin-top: 1rem; font-size: .95rem; opacity: .75; }
+    .a-idn .a-chips { margin-top: 1.4rem; }
+    .a-rows { display: flex; flex-direction: column; gap: clamp(1.6rem, 4vh, 2.4rem); }
+    .a-row { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; align-items: baseline; }
+    .a-k { font-size: .8rem; color: var(--sel); }
+    .a-t { font-family: var(--font-title); font-weight: 600; font-size: clamp(1.1rem, 1.6vw, 1.4rem); line-height: 1.25; }
+    .a-s { margin-top: .3rem; font-size: .88rem; opacity: .7; }
+    .a-list { display: flex; flex-direction: column; gap: 1.2rem; }
+    .a-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .a-chips span, .a-chips a { padding: .5rem 1rem; border-radius: 999px; background: rgba(250,250,250,.12); font-size: .86rem; }
+    .a-chips a { color: var(--paper); text-decoration: none; transition: background .25s, color .25s, transform .25s; }
+    .a-contact { margin-top: 1.8rem; }
+    .a-contact .a-k { display: block; margin-bottom: .6rem; }
+    .a-chips a:hover, .a-chips a:focus-visible { background: var(--paper); color: var(--primary); transform: translateY(-2px); outline: none; }
+    .a-ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; font-size: .95rem; opacity: .9; }
+    /* Palabras (cinta que se desplaza) */
+    .a-words { overflow: hidden; padding: clamp(1.2rem, 4vh, 2.4rem) 0 clamp(2.4rem, 7vh, 4.5rem); display: flex; flex-direction: column; gap: .2rem; }
+    .a-wrow { display: flex; width: max-content; font-family: var(--font-title); font-style: italic; font-weight: 400; font-size: clamp(2.4rem, 6.4vw, 5.6rem); line-height: 1.12; color: var(--primary); white-space: nowrap; animation: wslide var(--sp, 26.67s) linear infinite; }
+    .a-wrow span { padding: 0 .5em; }
+    .a-wrow span::after { content: "·"; margin-left: 1em; opacity: .5; }
+    @keyframes wslide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .a-tools { margin-top: clamp(2.4rem, 6vh, 3.6rem); }
+    .a-tools-row { display: flex; flex-wrap: wrap; gap: 1.2rem 1.4rem; margin-top: 1.2rem; }
+    .a-tool { display: flex; flex-direction: column; align-items: center; gap: .55rem; width: 84px; font-size: .74rem; text-align: center; opacity: .95; }
+    .a-tool span.sq { width: 72px; aspect-ratio: 1; border-radius: 20px; background: #E4E0DF; display: grid; place-items: center; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+    .a-tool:hover span.sq { transform: translateY(-4px); }
+    .a-tool img { width: 44px; height: 44px; display: block; }
+
+    /* ---- 3. Historia ---- */
+    .a-story { padding: clamp(3.5rem, 9vh, 6.5rem) 0; }
+    .a-story .a-wrap { display: grid; grid-template-columns: .8fr 1.2fr; gap: 6vw; align-items: start; }
+    .a-story .a-h2 { font-size: clamp(1.8rem, 3.4vw, 3rem); font-style: italic; font-weight: 400; color: var(--primary); }
+    .a-story .txt { display: flex; flex-direction: column; gap: 1.2rem; max-width: 60ch; }
+    .a-story p { font-size: clamp(.95rem, 1.1vw, 1.05rem); line-height: 1.75; color: #2a2a2a; }
+    .a-story strong { color: var(--primary); font-weight: 700; }
+    /* Las artes que nos nutren: tres círculos; al hacer click en uno, una barra roja aparece detrás y los otros dos (más un tercero que aparece) pasan a ser ejemplos de esa disciplina.
+       Imágenes: assets/arte-<disciplina>.jpg y assets/arte-<disciplina>-1/2/3.jpg (si falta una, queda el círculo liso) */
+    .a-arts { padding: clamp(2.5rem, 7vh, 5rem) 0 clamp(3rem, 8vh, 5.5rem); text-align: center; overflow-x: clip; }
+    .a-arts .a-h2 { font-size: clamp(1.8rem, 3.4vw, 3rem); font-style: italic; font-weight: 400; color: var(--primary); }
+    .a-arts-row { --dia: clamp(120px, 16vw, 220px); --pad: clamp(.7rem, 1.4vw, 1.1rem); position: relative; display: flex; justify-content: center; align-items: flex-start; gap: var(--gap); width: max-content; max-width: 100%; margin: clamp(3rem, 8vh, 5rem) auto clamp(2.4rem, 6vh, 4rem); padding: 0 calc(var(--pad) + 1.2rem); }
+    .a-arts-row::before { content: ""; position: absolute; z-index: 0; left: 50%; width: 100vw; margin-left: -50vw; top: calc(var(--pad) * -1); height: calc(var(--dia) + var(--pad) * 2); background: var(--primary); opacity: 0; transform: scaleY(.5); transition: opacity .4s ease, transform .55s cubic-bezier(.2,.8,.2,1); pointer-events: none; }   /* franja a todo el ancho de la pantalla */
+    .a-arts-row.open::before { opacity: 1; transform: none; }
+    .a-arts-row { --gap: clamp(1.2rem, 3.4vw, 3rem); }
+    .a-art { position: relative; z-index: 1; width: var(--dia); margin: 0; }
+    .a-art.x { width: 0; margin-left: calc(var(--gap) * -1); opacity: 0; overflow: hidden; pointer-events: none; transition: width .55s cubic-bezier(.2,.8,.2,1), margin .55s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
+    .a-arts-row.open .a-art.x { width: var(--dia); margin-left: 0; opacity: 1; overflow: visible; pointer-events: auto; }
+    .a-art .c { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 50%; background: #EBE4E2; overflow: hidden; cursor: pointer; box-shadow: 0 14px 30px rgba(63,10,5,.16); transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .45s; }
+    .a-art .c:focus-visible { outline: 3px solid var(--sel); outline-offset: 4px; }
+    .a-art .c img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .25s ease; }
+    .a-art .c .ov { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; background: rgba(96,15,8,.58); color: #fff; opacity: 0; transition: opacity .3s ease; }
+    .a-art .c .ov i { position: relative; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: #fff; flex: none; }
+    .a-art .c .ov i::before, .a-art .c .ov i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 46%; height: 2px; border-radius: 1px; background: var(--primary); transform: translate(-50%, -50%); transition: transform .3s; }
+    .a-art .c .ov i::after { transform: translate(-50%, -50%) rotate(90deg); }
+    .a-art .c .ov em { font-style: normal; font-size: clamp(.62rem, .9vw, .8rem); font-weight: 600; letter-spacing: .02em; }
+    .a-art b { display: block; margin-top: calc(var(--pad) + 1.4rem); font-family: var(--font-title); font-weight: 600; font-size: clamp(1rem, 1.4vw, 1.3rem); color: var(--primary); transition: opacity .25s ease; }
+    .a-art.fade .c img, .a-art.fade b { opacity: 0; }
+    .a-arts-row.open .a-art:not(.sel) b { font-family: var(--font-body); font-weight: 500; font-size: clamp(.76rem, 1vw, .92rem); letter-spacing: .03em; }   /* con la barra abierta, los títulos bajan de jerarquía (otra tipografía) */
+    @media (hover: hover) { .a-arts-row:not(.open) .a-art .c:hover, .a-art.sel .c:hover { transform: translateY(-6px); box-shadow: 0 22px 40px rgba(63,10,5,.24); } .a-arts-row:not(.open) .a-art .c:hover .ov, .a-art.sel .c:hover .ov { opacity: 1; } }
+    .a-art.sel .c .ov i::after { transform: translate(-50%, -50%) rotate(0); }
+    .a-arts-row.open .a-art:not(.sel) .c { transform: scale(.82); cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,.28); }
+    .a-art .c img { filter: grayscale(0); transition: opacity .25s ease, filter .5s ease; }
+    .a-art.sel .c img { filter: grayscale(1); }   /* la portada de la disciplina abierta pasa a blanco y negro; los ejemplos quedan a color */
+    @media (hover: hover) { .a-arts-row.open .a-art:not(.sel) .c:hover { transform: scale(.88); box-shadow: 0 12px 24px rgba(0,0,0,.34); } }
+    .a-art.sel { order: -1; }   /* la disciplina abierta va siempre primera, a la izquierda de todo */
+    .a-art .c .ov2 { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(96,15,8,.62); color: #fff; font-size: clamp(.7rem, .95vw, .85rem); font-weight: 600; letter-spacing: .02em; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+    @media (hover: hover) { .a-arts-row.open .a-art:not(.sel) .c:hover .ov2 { opacity: 1; } }
+    .a-arts p.t { transition: opacity .25s ease; } .a-arts p.t.fade { opacity: 0; }
+    .a-arts p.t { max-width: 62ch; margin: 0 auto; font-size: clamp(.95rem, 1.1vw, 1.05rem); line-height: 1.75; color: #2a2a2a; }
+    .a-arts p.t strong { color: var(--primary); font-weight: 700; }
+    @media (max-width: 720px) { .a-arts-row { flex-wrap: wrap; width: auto; --dia: 38vw; } .a-arts-row::before { display: none; } }
+
+    /* ---- 4. CV ---- */
+    .a-cv .a-wrap { display: grid; grid-template-columns: minmax(260px, 480px) 1fr; gap: 6vw; align-items: center; }
+    .a-cv-img { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 50px rgba(0,0,0,.35); transition: transform .4s cubic-bezier(.2,.8,.2,1); background: var(--paper); }
+    .a-cv-img:hover, .a-cv-img:focus-visible { transform: translateY(-4px); outline: none; }
+    .a-cv-img { position: relative; }
+    /* Visor ampliado del CV */
+    .a-lb { position: fixed; inset: 0; z-index: 2000; background: rgba(63,10,5,.94); display: none; overflow-y: auto; padding: clamp(1rem, 4vh, 2.5rem) 0; cursor: zoom-out; }
+    .a-lb.open { display: block; animation: lbIn .3s ease both; }
+    .a-lb img { display: block; width: min(1000px, 94vw); height: auto; margin: 0 auto; border-radius: 14px; background: var(--paper); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+    .a-lb.foto img { width: auto; max-width: 94vw; max-height: 92vh; }   /* foto vertical: entera en pantalla */
+    .a-lb-x { position: fixed; top: 1.1rem; right: 1.3rem; width: 46px; height: 46px; border: 0; border-radius: 50%; background: var(--paper); color: var(--primary); display: grid; place-items: center; cursor: pointer; z-index: 2; transition: background .25s, transform .25s; }
+    .a-lb-x:hover, .a-lb-x:focus-visible { background: var(--sel); transform: scale(1.06); outline: none; }
+    .a-lb-x svg { width: 20px; height: 20px; }
+    @keyframes lbIn { from { opacity: 0; } to { opacity: 1; } }
+    html { scroll-behavior: smooth; }
+    .a-cv { scroll-margin-top: 1rem; }
+    .a-cv-img img { width: 100%; height: auto; display: block; }
+    .a-cv p { font-size: clamp(.95rem, 1.1vw, 1.05rem); line-height: 1.7; opacity: .9; max-width: 44ch; margin: 1.1rem 0 2rem; }
+    .a-cv .meta { display: block; margin-top: 1.1rem; font-size: .78rem; opacity: .65; }
+    .a-cv .a-h2 { font-size: clamp(1.8rem, 3.4vw, 3rem); font-style: italic; font-weight: 400; }
+    .a-cv .a-actions { margin-top: 0; }
+    .a-cv .a-btn.soft { background: rgba(250,250,250,.12); color: var(--paper); }
+    .a-cv .a-btn.soft:hover, .a-cv .a-btn.soft:focus-visible { background: rgba(250,250,250,.22); }
+
+    /* ---- 5. Cierre ---- */
+    .a-end { padding: clamp(3.5rem, 9vh, 6rem) 0 clamp(3rem, 8vh, 5rem); text-align: center; }
+    .a-end .a-h2 { font-family: var(--font-title); font-style: italic; font-weight: 400; font-size: clamp(1.45rem, 4.6vw, 3.8rem); color: var(--primary); max-width: 26ch; margin: 0 auto 2rem; line-height: 1.08; text-wrap: balance; }
+
+    /* ---- 6. Pelotas con física: otros proyectos (misma mecánica que la Home) ---- */
+    .a-more { padding: 0 0 clamp(4rem, 10vh, 7rem); text-align: center; }
+    .a-more .a-label { color: var(--primary-hover); }
+    /* Contenedor amplio (casi todo el ancho y alto de pantalla) para que las pelotas entren sin chocar todo el tiempo */
+    .a-play { position: relative; width: min(1560px, 100% - 4vw); height: clamp(440px, 68vh, 600px); margin: 1.4rem auto 0; border-radius: clamp(28px, 4vw, 56px); background: rgba(96,15,8,.05); overflow: hidden; }
+    .a-ball { position: absolute; top: 0; left: 0; border-radius: 50%; background: #EBE4E2; overflow: hidden; cursor: grab; touch-action: none; will-change: transform; box-shadow: 0 10px 25px rgba(0,0,0,.15); container-type: size; user-select: none; -webkit-user-select: none; }
+    .a-ball.is-dragging { cursor: grabbing; }
+    .a-ball .pimg { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+    .a-ball .pimg img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
+    .a-ball .pimg svg { width: 42%; height: 42%; color: #B5ABA9; }
+    .a-ball .pimg::after { content: ""; position: absolute; inset: 0; background: rgba(63,10,5,.62); opacity: 0; transition: opacity .25s ease; }
+    .a-ball .pinfo { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3cqw; padding: 14cqw; text-align: center; color: #fff; opacity: 0; transition: opacity .25s ease; pointer-events: none; z-index: 2; }
+    .a-ball .pinfo i { font-family: var(--font-title); font-size: 13.5cqw; line-height: 1.08; }
+    .a-ball:focus-visible { outline: 3px solid var(--sel); outline-offset: 3px; }
+    .a-ball:hover .pinfo, .a-ball.show-info .pinfo { opacity: 1; }
+    .a-ball:hover .pimg::after, .a-ball.show-info .pimg::after { opacity: 1; }
+    /* Círculo rojo que crece desde la pelota al entrar al proyecto (igual que en la Home) */
+    .expander { position: fixed; inset: 0; z-index: 1000; background: var(--primary); pointer-events: all; transition: clip-path .95s cubic-bezier(.7,0,.2,1); will-change: clip-path; }
+
+    /* ---- Aparición al scroll (solo si hay JS) ---- */
+    .js .rv { opacity: 0; transform: translateY(16px); transition: opacity .4s cubic-bezier(.2,.8,.2,1), transform .4s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--d, 0s) * .4); }
+    .js .rv.in { opacity: 1; transform: none; }
+
+    @media (max-width: 900px) {
+      .a-sheet { grid-template-columns: 1fr; gap: 2rem; }
+      .a-row { grid-template-columns: 1fr; gap: .4rem; }
+      .a-hero .a-wrap, .a-story .a-wrap, .a-cv .a-wrap { grid-template-columns: 1fr; gap: 2.4rem; }
+      .a-photo { justify-self: center; width: min(78vw, 360px); margin-top: 1rem; }
+      .a-hero .a-wrap { display: flex; flex-direction: column-reverse; align-items: stretch; }
+      .a-cv .a-wrap { grid-template-columns: 1fr; }
+      .a-cv-view { width: min(92vw, 450px); margin-inline: auto; }
+      .a-wrap { width: min(1180px, 100% - 3rem); }
+    }
+    @media (prefers-reduced-motion: reduce) { .js .rv { opacity: 1; transform: none; transition: none; } .a-wrow { animation: none; flex-wrap: wrap; width: auto; white-space: normal; } }
+  </style>
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="artist">
+  <header>
+    <a class="brand" href="index.html"><span class="logo">Melaza Studio</span><span class="tagline">Estudio creativo</span></a>
+    <nav>
+      <ul>
+        <li><a href="sobre-mi.html" aria-current="page">Sobre mí</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 1 · Portada -->
+    <section class="a-hero on-paper">
+      <div class="a-wrap">
+        <div>
+          <h1 class="rv" style="--d:.08s">Melina<br>Lozano</h1>
+          <p class="sub rv" style="--d:.16s">Creadora de <span>Melaza Studio</span></p>
+          <div class="a-actions rv" style="--d:.24s">
+            <a class="a-btn solid" href="#curriculum">Ver CV <i aria-hidden="true">↓</i></a>
+            <a class="a-btn soft" href="contacto.html">Conectemos</a>
+          </div>
+        </div>
+        <figure class="a-photo rv" style="--d:.15s">
+          <button class="arc" id="foto-link" type="button" aria-label="Ampliar la foto de Melina Lozano"><img src="assets/melina.jpg" alt="Melina Lozano en una sala de museo, junto a una pintura de paisaje" width="1000" height="1778"></button>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Palabras -->
+    <section class="a-words on-paper" aria-label="Omnívora, inquisitiva, polímata, conceptual y dulce">
+      <div class="a-wrow r1" aria-hidden="true"></div>
+    </section>
+
+    <!-- 2 · Datos de la artista + herramientas -->
+    <section class="a-band a-data" aria-labelledby="datos">
+      <div class="a-wrap">
+        <div class="a-data-head rv">
+          <div>
+            <h2 class="a-label" id="datos">Datos de la artista</h2>
+          </div>
+        </div>
+        <div class="a-sheet">
+          <div class="a-idn rv">
+            <p class="a-name">Melina Eliana Lozano</p>
+            <p class="a-loc">Monte Grande, Buenos Aires</p>
+            <div class="a-chips"><span>Español nativo</span><span>Inglés C2</span></div>
+            <div class="a-contact">
+              <span class="a-k">Contacto</span>
+              <div class="a-chips a-links"><a id="a-mail" href="#">Mail</a><a id="a-wa" href="#" target="_blank" rel="noopener">WhatsApp</a></div>
+            </div>
+          </div>
+          <div class="a-rows">
+            <div class="a-row rv">
+              <span class="a-k">Formación</span>
+              <div><p class="a-t">Lic. en Diseño Multimedia e Interacción</p><p class="a-s">UADE · 2024 - presente</p></div>
+            </div>
+            <div class="a-row rv" style="--d:.06s">
+              <span class="a-k">Experiencia</span>
+              <div class="a-list">
+                <div><p class="a-t">Diseñadora gráfica</p><p class="a-s">Agencia Vinca · Mayo 2024 - Septiembre 2024</p></div>
+                <div><p class="a-t">Diseñadora gráfica</p><p class="a-s">Punto Control · Febrero 2023 - Abril 2024</p></div>
+              </div>
+            </div>
+            <div class="a-row rv" style="--d:.12s">
+              <span class="a-k">Disciplinas</span>
+              <div class="a-chips"><span>UX/UI</span><span>Desarrollo web</span><span>Comunicación digital</span><span>Ilustración</span><span>Experiencias interactivas</span></div>
+            </div>
+            <div class="a-row rv" style="--d:.18s">
+              <span class="a-k">Certificaciones</span>
+              <ul class="a-ul"><li>Bachillerato Internacional Bilingüe</li><li>Cambridge Advanced C2</li><li>IBM Artificial Intelligence</li></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="a-tools">
+          <span class="a-label rv">Herramientas</span>
+          <div class="a-tools-row" id="a-tools"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3b · Las artes que nos nutren -->
+    <section class="a-arts on-paper" aria-labelledby="artes">
+      <div class="a-wrap">
+        <h2 class="a-h2 rv" id="artes">Las artes que nos nutren</h2>
+        <div class="a-arts-row" id="arts-row">
+          <figure class="a-art rv" style="--d:0.08s" data-k="pintura"><button class="c" type="button" aria-label="Pintura: hacé click para ver ejemplos"><img src="assets/arte-pintura.jpg" alt="Pintura" loading="lazy" onerror="this.remove()"><span class="ov" aria-hidden="true"><i></i></span></button><b>Pintura</b></figure>
+          <figure class="a-art rv" style="--d:0.16s" data-k="escultura"><button class="c" type="button" aria-label="Escultura: hacé click para ver ejemplos"><img src="assets/arte-escultura.jpg" alt="Escultura" loading="lazy" onerror="this.remove()"><span class="ov" aria-hidden="true"><i></i></span></button><b>Escultura</b></figure>
+          <figure class="a-art rv" style="--d:0.24s" data-k="literatura"><button class="c" type="button" aria-label="Literatura: hacé click para ver ejemplos"><img src="assets/arte-literatura.jpg" alt="Literatura" loading="lazy" onerror="this.remove()"><span class="ov" aria-hidden="true"><i></i></span></button><b>Literatura</b></figure>
+          <figure class="a-art x" aria-hidden="true"><button class="c" type="button" tabindex="-1"></button><b></b></figure>   <!-- tercer ejemplo: aparece solo al abrir una disciplina (son 3 ejemplos y quedan 2 círculos) -->
+        </div>
+        <p class="t rv" id="arts-text" style="--d:.2s">En Melaza Studio no solo damos resultados, sino que creamos una propuesta que nace a partir de <strong>las artes que nos nutren día a día</strong>. Con nosotros no vas a tener un simple diseño o aplicación, sino <strong>un producto sostenible y relevante basado en las artes</strong>.</p>
+      </div>
+    </section>
+
+    <!-- 4 · CV -->
+    <section class="a-band a-cv" id="curriculum" aria-labelledby="cv">
+      <div class="a-wrap">
+        <div class="a-cv-view rv">
+          <button class="a-cv-img" id="cv-link" type="button" aria-label="Ampliar la vista previa del CV">
+            <img src="assets/cv-vista.jpg" alt="Vista previa del CV de Melina Lozano" loading="lazy" width="1587" height="2192">
+          </button>
+        </div>
+        <div>
+          <span class="a-label rv">Currículum</span>
+          <h2 class="a-h2 rv" id="cv" style="--d:.06s">Mi CV</h2>
+          <p class="rv" style="--d:.12s">Diseñadora multimedia especializada en UX/UI, desarrollo web y comunicación digital, enfocada en crear productos y experiencias digitales funcionales y atractivas.</p>
+          <div class="a-actions rv" style="--d:.18s">
+            <a class="a-btn light" id="cv-dl" href="assets/CV-Melina-Lozano.pdf" target="_blank" rel="noopener">Descargar CV <i aria-hidden="true">↓</i></a>
+            <button class="a-btn soft" id="cv-zoom" type="button">Ampliar vista</button>
+          </div>
+          <span class="meta rv" style="--d:.24s" id="cv-meta">PDF · 1 página · 1,3 MB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Historia -->
+    <section class="a-story on-paper" aria-labelledby="hist">
+      <div class="a-wrap">
+        <div class="rv">
+          <span class="a-label">El primer boceto</span>
+          <h2 class="a-h2" id="hist">Sobre mí</h2>
+        </div>
+        <div class="txt">
+          <p class="rv">Los orígenes de Melaza Studio se remontan a <strong>diez años atrás</strong>, cuando una <strong>Meli de 11 años</strong> decidió aprender a usar <strong>Photoshop</strong> por su cuenta para hacer dibujos de su juego favorito, <strong>Five Nights at Freddy's</strong>. Una tableta Wacom Intuos y diez años más tarde, nace Melaza: <strong>un estudio creativo de diseño nutrido por múltiples disciplinas artísticas</strong>.</p>
+          <p class="rv">Melaza es el lugar al que acudir cuando buscás <strong>un enfoque fuera de lo común</strong>. Un espacio donde <strong>el diseño digital se encuentra con el arte</strong>, el dibujo, la costura y todas esas formas de crear que construyen a una artista. Porque creemos que <strong>un producto no nace únicamente en una pantalla</strong>, sino que puede partir de lo material, lo físico y todo aquello artístico para convertirse en <strong>algo único</strong>.</p>
+          <p class="rv">En Melaza Studio no te llevás solamente un producto o un resultado final. Te llevás <strong>un concepto, una identidad y una visión creativa</strong> que trascienden lo digital para construir <strong>una marca con personalidad propia</strong>, capaz de existir mucho más allá de una pantalla.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · Cierre -->
+    <section class="a-end on-paper">
+      <div class="a-wrap">
+        <h2 class="a-h2 rv">Contame tus ideas y creemos tu propia obra.</h2>
+        <a class="a-btn solid rv" style="--d:.1s" href="contacto.html">Conectemos <i aria-hidden="true" style="transform:none">→</i></a>
+      </div>
+    </section>
+
+    <!-- 6 · Pelotas con física: navegar a otros proyectos -->
+    <section class="a-more on-paper" aria-labelledby="otros">
+      <div class="a-wrap">
+        <span class="a-label rv" id="otros">Otros proyectos</span>
+      </div>
+      <div class="a-play" id="a-play" role="group" aria-label="Pelotas de proyectos: arrastralas y hacé click para entrar"></div>
+    </section>
+  </main>
+
+  <!-- Matter.js para el motor de física (el mismo que usa la Home) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="proyectos.js"></script>
+  <script src="mesa-contenido.js"></script>
+  <script src="argentina-contenido.js"></script>
+  <script src="petstar-contenido.js"></script>
+  <script src="bebemi-contenido.js"></script>
+  <script src="dm-contenido.js"></script>
+  <script src="dual-contenido.js"></script>
+  <script src="proyectos-final.js"></script>
+  <script>
+    window.addEventListener('pageshow', () => document.body.classList.remove('is-leaving'));
+
+    // Herramientas: mismos logos que usa cada proyecto
+    (function () {
+      const box = document.getElementById('a-tools');
+      if (!box || typeof TOOLS === 'undefined') return;
+      box.innerHTML = ['photoshop', 'illustrator', 'indesign', 'lightroom', 'aftereffects', 'figma', 'blender']
+        .map(k => TOOLS[k]).filter(Boolean)
+        .map((t, i) => `<div class="a-tool rv" style="--d:${i * .05}s"><span class="sq"><img src="${t.image}" alt="" width="44" height="44"></span>${t.name}</div>`).join('');
+    })();
+
+    // Pelotas del final con física (como en la Home): cuatro proyectos. Click (mouse) o doble toque = entrar; arrastrar = mover.
+    (function () {
+      const box = document.getElementById('a-play');
+      if (!box || typeof PROJECTS === 'undefined') return;
+      const touch = matchMedia('(hover: none)').matches;
+      if (typeof Matter === 'undefined') {            // sin el motor de física: pelotas fijas y clicables
+        box.style.cssText += ';display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:1.4rem;height:auto;padding:2rem 0';
+        [4, 6, 5, 3].map(id => PROJECTS.find(p => p.id === id)).filter(Boolean).forEach(p => {
+          const a = document.createElement('a'); a.href = p.url; a.className = 'a-ball'; a.style.cssText = 'position:relative;width:140px;height:140px;display:block';
+          a.innerHTML = `<span class="pimg">${p.cover ? `<img src="${p.cover}" alt="${p.name}">` : ''}</span><span class="pinfo"><i>${p.name}</i></span>`;
+          box.appendChild(a);
+        });
+        return;
+      }
+      const { Engine, Bodies, Body, Composite } = Matter;
+      const engine = Engine.create({ enableSleeping: true }); engine.world.gravity.y = 1.2;   // las pelotas apoyadas y quietas duermen: no tiemblan
+      let W = box.clientWidth, H = box.clientHeight, running = false, started = false, opening = false;
+      const T = 500, wo = { isStatic: true, restitution: .2, friction: .5 };
+      const ground = Bodies.rectangle(W / 2, H + T / 2, W * 3, T, wo), left = Bodies.rectangle(-T / 2, H / 2, T, H * 3, wo);
+      const right = Bodies.rectangle(W + T / 2, H / 2, T, H * 3, wo), ceil = Bodies.rectangle(W / 2, -T / 2, W * 3, T, wo);
+      Composite.add(engine.world, [ground, left, right, ceil]);
+      const objs = [];
+      const baseD = window.innerWidth < 768 ? 80 : 137;     // misma pelota base que la Home
+      const ph = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 18l5.5-5.5 4 4 2.5-2.5L21 18"/></svg>';
+
+      function openProject(o) {
+        if (opening) return; opening = true; clearInfo();
+        const r = o.elem.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+        const maxR = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+        const ex = document.createElement('div'); ex.className = 'expander';
+        ex.style.clipPath = `circle(${r.width / 2}px at ${x}px ${y}px)`; document.body.appendChild(ex);
+        void ex.offsetWidth; ex.style.clipPath = `circle(${maxR + 2}px at ${x}px ${y}px)`;
+        let done = false; const go = () => { if (!done) { done = true; location.href = o.project.url; } };
+        ex.addEventListener('transitionend', go); setTimeout(go, 1200);
+      }
+      window.addEventListener('pageshow', () => { document.querySelectorAll('.expander').forEach(e => e.remove()); opening = false; });
+      const clearInfo = () => box.querySelectorAll('.show-info').forEach(e => e.classList.remove('show-info'));
+      let lastTap = { o: null, t: 0 };
+
+      function setupDrag(o) {
+        const { elem, body } = o; const th = makeThrow(); let sx = 0, sy = 0, st = 0, moved = false;
+        const pos = e => { const b = box.getBoundingClientRect(); return [Math.max(o.h, Math.min(W - o.h, e.clientX - b.left)), Math.max(o.h, Math.min(H - o.h, e.clientY - b.top))]; };
+        elem.addEventListener('pointerdown', e => {
+          o.drag = true; elem.classList.add('is-dragging'); elem.setPointerCapture(e.pointerId);
+          objs.forEach(x => Matter.Sleeping.set(x.body, false)); { const [px, py] = pos(e); th.reset(px, py, performance.now()); } o.ptype = e.pointerType; sx = e.clientX; sy = e.clientY; st = performance.now(); moved = false; Body.setStatic(body, true);
+        });
+        elem.addEventListener('pointermove', e => {
+          if (!o.drag) return;
+          if (Math.hypot(e.clientX - sx, e.clientY - sy) > 6) moved = true;
+          const [x, y] = pos(e); Body.setPosition(body, { x, y }); th.add(x, y, performance.now());
+        });
+        const up = e => {
+          if (!o.drag) return; o.drag = false; elem.classList.remove('is-dragging');
+          Body.setStatic(body, false); objs.forEach(x => Matter.Sleeping.set(x.body, false)); Body.setVelocity(body, th.vel(performance.now()));
+          if (e.type === 'pointerup' && !moved && performance.now() - st < 500) {     // toque corto: 1 = ver título · 2 = abrir
+            const now = performance.now();
+            if (o.ptype !== 'touch' || (lastTap.o === o && now - lastTap.t < 380)) openProject(o);
+            else if (touch) { clearInfo(); elem.classList.add('show-info'); }
+            lastTap = { o, t: now };
+          }
+        };
+        elem.addEventListener('pointerup', up); elem.addEventListener('pointercancel', up);
+        elem.addEventListener('keydown', e => { if (e.key === 'Enter') openProject(o); });
+      }
+
+      // Las pelotas nacen (y empiezan a caer) cuando la sección entra en pantalla
+      function spawn() {
+        [4, 6, 5, 3].map(id => PROJECTS.find(p => p.id === id)).filter(Boolean).forEach((p, i, arr) => {
+          const d = baseD * sizeFactor(p.sizeIndex, p.sizeTotal), h = d / 2;      // mismo tamaño que en la Home
+          const elem = document.createElement('div');
+          elem.className = 'a-ball'; elem.style.width = elem.style.height = d + 'px'; elem.tabIndex = 0;
+          elem.setAttribute('aria-label', `Proyecto ${p.number}: ${p.name} (click para entrar)`);
+          elem.innerHTML = `<span class="pimg">${p.cover ? `<img src="${p.cover}" alt="" draggable="false">` : ph}</span><span class="pinfo"><i>${p.name}</i></span>`;
+          box.appendChild(elem);
+          const body = Bodies.circle(h + (W - d) * (i / Math.max(1, arr.length - 1)), h + 10 + (i % 3) * 30, h, { restitution: .25, friction: .2, density: .002 });
+          Composite.add(engine.world, body);
+          const o = { elem, body, project: p, h, drag: false }; objs.push(o); setupDrag(o);
+        });
+      }
+
+      const calm = makeCalm(engine, () => objs.filter(o => !o.drag).map(o => o.body)), step = makeStepper(engine, calm);
+      function frame(now) {
+        if (running) {
+          step(now || performance.now());
+          objs.forEach(o => {
+            const x = Math.max(o.h, Math.min(W - o.h, o.body.position.x)), y = Math.max(o.h, Math.min(H - o.h, o.body.position.y));
+            if (Math.abs(x - o.body.position.x) > 3 || Math.abs(y - o.body.position.y) > 3) Body.setPosition(o.body, { x, y });
+            const tf = `translate(${x - o.h}px, ${y - o.h}px) rotate(${o.body.angle}rad)`;
+            if (o._tf !== tf) { o._tf = tf; o.elem.style.transform = tf; }
+          });
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      new IntersectionObserver(es => es.forEach(en => {
+        running = en.isIntersecting;
+        if (running && !started) { started = true; spawn(); }
+      }), { threshold: .35 }).observe(box);
+
+      window.addEventListener('resize', () => {
+        W = box.clientWidth; H = box.clientHeight;
+        Body.setPosition(ground, { x: W / 2, y: H + T / 2 }); Body.setPosition(left, { x: -T / 2, y: H / 2 });
+        Body.setPosition(right, { x: W + T / 2, y: H / 2 }); Body.setPosition(ceil, { x: W / 2, y: -T / 2 });
+        objs.forEach(o => Matter.Sleeping.set(o.body, false));
+      });
+      document.addEventListener('pointerdown', e => { if (!e.target.closest('.a-ball')) clearInfo(); });
+    })();
+
+    // Contacto en los datos de la artista: el mail abre un correo nuevo y WhatsApp abre un chat directo
+    (function () {
+      const m = document.getElementById('a-mail'), w = document.getElementById('a-wa');
+      if (m && typeof CONTACT_EMAIL !== 'undefined') { m.href = 'mailto:' + CONTACT_EMAIL; m.textContent = CONTACT_EMAIL; }
+      if (w && typeof whatsappURL === 'function') { w.href = whatsappURL(); w.innerHTML = '<svg class="wa" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.93L2 22l5.2-1.5A9.9 9.9 0 1 0 12.04 2zm0 1.8a8.1 8.1 0 1 1-4.2 15.04l-.3-.18-3 .87.9-2.92-.2-.3A8.1 8.1 0 0 1 12.04 3.8zm-3.1 4.1c-.2 0-.5.07-.75.35-.25.28-.97.95-.97 2.3s1 2.7 1.13 2.88c.14.18 1.93 3.07 4.77 4.18 2.36.93 2.84.75 3.35.7.51-.05 1.65-.67 1.88-1.32.23-.65.23-1.2.16-1.32-.07-.12-.25-.18-.53-.32-.28-.14-1.65-.82-1.9-.91-.26-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.09-.16.18-.32.2-.6.07-.28-.14-1.18-.44-2.25-1.4-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.12.28-.32.42-.49.14-.16.18-.28.28-.46.09-.19.05-.35-.02-.49-.07-.14-.63-1.5-.86-2.06-.22-.54-.45-.46-.63-.47h-.54z"/></svg> ' + CONTACT_WHATSAPP_LABEL; w.setAttribute('aria-label', 'WhatsApp ' + CONTACT_WHATSAPP_LABEL); w.style.display='inline-flex'; w.style.alignItems='center'; w.style.gap='.5rem'; }
+    })();
+
+    // Vista ampliada: un click en la vista previa del CV (o en "Ampliar vista") o en la foto de Sobre mí la agranda dentro de la página;
+    // la cruz (o Esc / click afuera) la cierra
+    function visorAmpliado(etiqueta, src, alt, w, h, clase) {
+      const lb = document.createElement('div');
+      lb.className = 'a-lb' + (clase ? ' ' + clase : ''); lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', etiqueta);
+      lb.innerHTML = '<button class="a-lb-x" type="button" aria-label="Cerrar la vista ampliada"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg></button><img src="' + src + '" alt="' + alt + '" width="' + w + '" height="' + h + '">';
+      document.body.appendChild(lb);
+      const big = lb.querySelector('img'), x = lb.querySelector('.a-lb-x');
+      let opener = null;
+      const open = from => { opener = from; lb.classList.add('open'); lb.scrollTop = 0; document.body.style.overflow = 'hidden'; x.focus(); };
+      const close = () => { lb.classList.remove('open'); document.body.style.overflow = ''; if (opener) opener.focus(); };
+      x.addEventListener('click', e => { e.stopPropagation(); close(); });
+      lb.addEventListener('click', e => { if (e.target !== big) close(); });
+      window.addEventListener('keydown', e => { if (e.key === 'Escape' && lb.classList.contains('open')) close(); });
+      return open;
+    }
+    (function () {
+      const cv = document.getElementById('cv-link'), cvZoom = document.getElementById('cv-zoom'), foto = document.getElementById('foto-link');
+      if (cv) { const open = visorAmpliado('Vista ampliada del CV', 'assets/cv-vista.jpg', 'CV de Melina Lozano ampliado', 1587, 2192); cv.addEventListener('click', () => open(cv)); cvZoom.addEventListener('click', e => open(e.currentTarget)); }
+      if (foto) { const open = visorAmpliado('Foto de Melina Lozano ampliada', 'assets/melina.jpg', 'Melina Lozano en una sala de museo, junto a una pintura de paisaje', 1000, 1778, 'foto'); foto.addEventListener('click', () => open(foto)); }
+    })();
+
+    // Palabras: cada fila repite las cinco palabras (y se duplica para que el bucle sea continuo)
+    (function () {
+      const W = ['omnívora', 'inquisitiva', 'polímata', 'conceptual', 'dulce'];
+      const half = [...W, ...W, ...W].map(w => `<span>${w}</span>`).join('');   // dos mitades iguales: el loop de la animación no se nota
+      document.querySelectorAll('.a-wrow').forEach(row => { row.innerHTML = half + half; });
+    })();
+
+    // Aparición al hacer scroll
+    (function () {
+      const els = document.querySelectorAll('.rv');
+      if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('in')); return; }
+      const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .06 });
+      els.forEach(e => io.observe(e));
+    })();
+  </script>
+  <script>
+    // Las artes que nos nutren: un click abre los ejemplos de esa disciplina (son 3: los otros 2 círculos y un tercero que aparece).
+    // Cada ejemplo lleva a su link en una pestaña nueva, y el texto de abajo cambia por una frase de esa disciplina.
+    (function () {
+      const row = document.getElementById('arts-row'); if (!row) return;
+      const ARTS = {
+        pintura: {
+          texto: 'La pintura nos nutre en su manera de entender <strong>el color y la luz</strong>: de ahí salen las paletas y los climas de cada pieza de Melaza.',
+          ej: [['Impresionismo', 'https://www.moma.org/collection/terms/impressionism'],
+               ['Cubismo', 'https://www.moma.org/collection/terms/cubism'],
+               ['Romanticismo', 'https://www.metmuseum.org/es/essays/romanticism']]
+        },
+        escultura: {
+          texto: 'La escultura nos nutre en su sentido del <strong>volumen y la proporción</strong>: nos enseña a pensar el diseño como algo con peso, forma y presencia.',
+          ej: [['Clásico', 'https://www.metmuseum.org/es/essays/the-art-of-classical-greece-ca-480-323-b-c'],
+               ['Hiperrealismo', 'https://www.mnbaq.org/en/programming/exhibitions/hyperrealism-this-is-not-a-body'],
+               ['Land art', 'https://www.nationalgalleries.org/art-and-artists/glossary-terms/land-art']]
+        },
+        literatura: {
+          texto: 'La literatura nos nutre en su forma de <strong>ordenar las ideas</strong>: de estos libros de diseño salen la estructura, la composición y el criterio con los que trabajamos.',
+          ej: [['Diseño Desde Marte', 'https://disenodesdemarte.com/'],
+               ['La Paleta Perfecta', 'https://www.buscalibre.com.ar/libro-la-paleta-perfecta-para-diseno-grafico-e-ilustracion-combinaciones-de-colores-simbolismo-y-referencias-culturales/9788417412937/p/53537173'],
+               ['Principios De Composición', 'https://www.mercadolibre.com.ar/principios-fundamentales-de-composicion--tondreaubeth/up/MLAU3402393300']]
+        }
+      };
+      const figs = [...row.querySelectorAll('.a-art:not(.x)')], extra = row.querySelector('.a-art.x');
+      const texto = document.getElementById('arts-text'), textoBase = texto.innerHTML;
+      const base = figs.map(f => ({ src: f.querySelector('img') ? f.querySelector('img').getAttribute('src') : `assets/arte-${f.dataset.k}.jpg`, name: f.querySelector('b').textContent }));
+      const setFig = (f, src, name, url) => {
+        const c = f.querySelector('.c'); let im = c.querySelector('img');
+        if (!im) { im = document.createElement('img'); im.loading = 'lazy'; c.prepend(im); }
+        im.onerror = () => im.remove(); im.alt = name; im.src = src;
+        if (!c.querySelector('.ov2')) { const o = document.createElement('span'); o.className = 'ov2'; o.setAttribute('aria-hidden', 'true'); o.textContent = 'Leer más'; c.appendChild(o); }
+        f.querySelector('b').textContent = name;
+        if (url) f.dataset.url = url; else delete f.dataset.url;
+        c.setAttribute('aria-label', url ? `${name}: abrir en una pestaña nueva` : f.classList.contains('sel') ? `${name}: hacé click para volver` : `${name}: hacé click para ver ejemplos`);
+      };
+      const swap = (f, fn) => { f.classList.add('fade'); setTimeout(() => { fn(); f.classList.remove('fade'); }, 230); };
+      const cambiarTexto = html => { texto.classList.add('fade'); setTimeout(() => { texto.innerHTML = html; texto.classList.remove('fade'); }, 250); };
+      let cur = null;
+      /* La disciplina elegida pasa a ser la primera (CSS order): se anima el cambio de lugar de cada círculo (FLIP) */
+      const mover = cambio => {
+        const all = [...figs, extra], antes = new Map(all.map(f => [f, f.getBoundingClientRect().left]));
+        cambio();
+        all.forEach(f => {
+          const dx = antes.get(f) - f.getBoundingClientRect().left; if (Math.abs(dx) < 1) return;
+          f.style.transition = 'none'; f.style.transform = `translateX(${dx}px)`; void f.offsetWidth;
+          f.style.transition = 'transform .55s cubic-bezier(.2,.8,.2,1)'; f.style.transform = '';
+          setTimeout(() => { f.style.transition = ''; }, 600);
+        });
+      };
+      const reset = () => {
+        cur = null; mover(() => { row.classList.remove('open'); figs.forEach(f => f.classList.remove('sel')); }); extra.querySelector('.c').tabIndex = -1; cambiarTexto(textoBase); extra.querySelector('.c').tabIndex = -1; cambiarTexto(textoBase);
+        figs.forEach((f, i) => swap(f, () => setFig(f, base[i].src, base[i].name)));
+        setTimeout(() => { if (!cur) { extra.querySelector('.c').innerHTML = ''; extra.querySelector('b').textContent = ''; delete extra.dataset.url; } }, 600);   // el círculo extra se vacía cuando termina de plegarse
+      };
+      const open = (k) => {
+        cur = k; extra.querySelector('.c').tabIndex = 0; cambiarTexto(ARTS[k].texto);
+        const slots = [...figs.filter(f => f.dataset.k !== k), extra];
+        mover(() => { row.classList.add('open'); figs.forEach(f => f.classList.toggle('sel', f.dataset.k === k)); });
+        slots.forEach((f, i) => swap(f, () => setFig(f, `assets/arte-${k}-${i + 1}.jpg`, ARTS[k].ej[i][0], ARTS[k].ej[i][1])));
+      };
+      [...figs, extra].forEach(f => f.querySelector('.c').addEventListener('click', () => {
+        if (!cur) { if (f !== extra) open(f.dataset.k); }
+        else if (f.classList.contains('sel')) reset();
+        else if (f.dataset.url) window.open(f.dataset.url, '_blank', 'noopener');
+      }));
+      window.addEventListener('keydown', e => { if (e.key === 'Escape' && cur) reset(); });
+      // El alto del texto se fija al del más largo: así el espacio hasta la sección siguiente no cambia al cambiar de disciplina
+      const fijarAlto = () => {
+        const actual = texto.innerHTML; texto.style.minHeight = ''; let m = 0;
+        [textoBase, ...Object.values(ARTS).map(a => a.texto)].forEach(h => { texto.innerHTML = h; m = Math.max(m, texto.offsetHeight); });
+        texto.innerHTML = actual; texto.style.minHeight = m + 'px';
+      };
+      fijarAlto(); window.addEventListener('resize', fijarAlto); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fijarAlto);
+    })();
+  </script>
+  <script>
+    // Barra de navegación en blanco mientras pasa por encima de una zona roja (franjas rojas de la página)
+    (function () {
+      const hd = document.querySelector('header'); if (!hd) return;
+      const reds = [...document.querySelectorAll('main > section')].filter(s => { const c = getComputedStyle(s).backgroundColor; const m = c.match(/\d+(\.\d+)?/g) || []; return m.length >= 3 && +m[0] > 60 && +m[1] < 40 && +m[2] < 40 && (m[3] === undefined || +m[3] > .5); });
+      let raf = 0;
+      const check = () => {
+        raf = 0;
+        const y = hd.offsetHeight / 2;
+        const on = reds.some(s => { const r = s.getBoundingClientRect(); return r.top <= y && r.bottom >= y; });
+        hd.classList.toggle('on-red', on);
+      };
+      const req = () => { if (!raf) raf = requestAnimationFrame(check); };
+      window.addEventListener('scroll', req, { passive: true }); window.addEventListener('resize', req); window.addEventListener('load', req); check();
+    })();
+    // Las artes que nos nutren: un click fuera de los círculos vuelve al estado normal
+    document.addEventListener('click', e => {
+      const row = document.getElementById('arts-row');
+      if (row && row.classList.contains('open') && !e.target.closest('.a-art .c')) { const sel = row.querySelector('.a-art.sel .c'); if (sel) sel.click(); }
+    });
+  </script>
+</body>
+</html>

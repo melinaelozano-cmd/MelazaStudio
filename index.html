@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Melaza Studio — Portfolio</title>
+  <link rel="icon" type="image/png" href="favicon-claro.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="favicon-oscuro.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Tipografías oficiales -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Kalnia:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+
+  <!-- Matter.js para el motor de física -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       1. VARIABLES & RESET
+       ========================================================================== */
+    :root {
+      --bw: 4px;                     /* grosor del borde rojo: igual en todos los círculos */
+      --color-primary: #600F08;      /* Rojo Melaza */
+      --color-primary-hover: #7D150B;/* Rojo hover */
+      --color-bg: #FAFAFA;           /* Papel Tinta */
+      --color-text: #111111;         /* Tinta Negra */
+      --font-title: 'Kalnia', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html { background-image: url("assets/papel.jpg"); background-size: cover; background-position: center; }   /* textura de papel en el fondo blanco */
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: transparent;
+      color: var(--color-text);
+      font-family: var(--font-body);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ==========================================================================
+       2. NAVEGACIÓN
+       ========================================================================== */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5vw;
+      z-index: 150;
+      background: transparent;
+      pointer-events: none;
+    }
+    header .brand, header nav { pointer-events: auto; }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand .logo {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-primary);
+    }
+
+    .brand .tagline {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--color-primary);
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    nav a {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text);
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+
+    nav a:hover {
+      opacity: 0.6;
+    }
+
+    /* ==========================================================================
+       3. FRASE
+       ========================================================================== */
+    .hero-intro {
+      position: absolute;
+      top: 160px;
+      left: 5vw;
+      max-width: 700px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .hero-intro h1 {
+      font-family: var(--font-title);
+      font-size: clamp(1.54rem, 2.97vw, 2.53rem);
+      line-height: 1.25;
+      font-weight: 400;
+      font-style: italic;
+      text-transform: none;
+      letter-spacing: 0.01em;
+      color: var(--color-text);
+    }
+
+    .hero-intro h1 strong {
+      font-weight: 600; /* SemiBold */
+      font-style: normal;
+    }
+
+    /* Mano de fondo: cada vez que se carga la Home aparece una distinta (assets/mano-*.png), a la derecha y con poca opacidad.
+       Es tinta oscura sobre transparente, así que se integra al papel igual que con multiply, pero sin el costo de un modo de fusión
+       debajo de las pelotas en movimiento (eso hacía que la Home se trabara). */
+    .bg-hand { position: fixed; right: 19vw; top: calc(var(--header-h, 80px) + 4vh); max-height: 62vh; max-width: 42vw; width: auto; height: auto; z-index: 1; opacity: 0; pointer-events: none; user-select: none; transition: opacity 1.2s ease .3s; }
+    .bg-hand.on { opacity: .26; }
+    @media (max-width: 768px) { .bg-hand { max-width: 70vw; max-height: 40vh; top: auto; bottom: 30vh; } }
+
+    /* ==========================================================================
+       4. CAPA DE ELEMENTOS FÍSICOS (CÍRCULOS E ÍCONOS)
+       ========================================================================== */
+    #physics-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .physics-node {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: grab;
+      touch-action: none;
+      will-change: transform;
+      pointer-events: auto;
+      z-index: 100;
+    }
+
+    /* Círculos de Proyectos */
+    .circle-node {
+      border-radius: 50%;
+      background-color: var(--color-primary);
+      color: #FAFAFA;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.25s ease;
+      overflow: hidden;
+    }
+
+    .circle-node:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    /* Imagen interna (placeholder o logo): deja ver un borde rojo de grosor constante */
+    .pimg {
+      position: absolute;
+      inset: var(--bw);
+      border-radius: 50%;
+      background-color: #EBE4E2;
+      background-size: 105%;
+      background-repeat: no-repeat;
+      background-position: center;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+    .pimg img { width: 100%; height: 100%; object-fit: cover; object-position: 55% 50%; display: block; }
+    /* Con imagen asignada: se ve solo la imagen, sin borde rojo */
+    .circle-node.has-img .pimg { inset: 0; }
+    .pimg svg { width: 42%; height: 42%; color: #B5ABA9; }
+    .pimg::after {                       /* velo oscuro al pasar el mouse */
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(63, 10, 5, 0.62);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .circle-node:hover .pimg::after { opacity: 1; }
+
+    /* Info dentro del círculo (hover o toque): "Doble click" + título, centrados y sin salir de la superficie */
+    .circle-node { container-type: size; }
+    .pinfo {
+      position: absolute;
+      inset: var(--bw);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3cqw;
+      padding: 14cqw;
+      text-align: center;
+      color: #FFFFFF;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .pinfo i { font-family: var(--font-title); font-size: 13.5cqw; line-height: 1.08; }
+    .circle-node:hover .pinfo, .circle-node.show-info .pinfo { opacity: 1; }
+    .circle-node.show-info .pimg::after { opacity: 1; }
+
+    /* Íconos de Software / Herramientas */
+    /* Íconos de programas: cuadrados de esquinas redondeadas, sin borde (solo se ve la imagen) */
+    .icon-node {
+      border-radius: 22%;
+      background-color: transparent;                    /* sin fondo: no se ve ningún reborde rojo */
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .physics-node:active, .physics-node.is-dragging {
+      cursor: grabbing;
+    }
+
+    /* ==========================================================================
+       5. VISTA PREVIA (UN CLIC) Y EXPANSIÓN (DOBLE CLIC)
+       ========================================================================== */
+
+    /* Círculo rojo que crece desde la pelota hasta cubrir toda la pantalla */
+    .expander {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--color-primary);
+      pointer-events: all;
+      transition: clip-path 0.95s cubic-bezier(0.7, 0, 0.2, 1);
+      will-change: clip-path;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 0 1.5rem;
+      }
+      nav ul {
+        gap: 1.4rem;
+      }
+      .hero-intro {
+        top: 120px;
+        max-width: 90vw;
+      }
+    }
+
+    /* ==========================================================================
+       SOBRE MÍ: cuadrado rojo de esquinas redondeadas que brota del botón (con círculos que flotan)
+       ========================================================================== */
+    nav li { position: relative; }
+    nav li.has-about::after { content: ""; position: absolute; left: -24px; right: -24px; top: 100%; height: 20px; }  /* puente para el mouse */
+    .about-panel {
+      position: absolute;
+      top: calc(100% + 14px);
+      right: 0;
+      width: min(540px, 92vw);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      text-align: left;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.32);
+      border-radius: 50%;                                  /* nace como un círculo en el botón… */
+      opacity: 0;
+      visibility: hidden;
+      transform: translate(6px, -8px) scale(0.7);
+      transform-origin: 92% 0;
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.25, 1),
+                  border-radius 0.4s cubic-bezier(0.2, 0.9, 0.25, 1),
+                  opacity 0.25s ease, visibility 0s linear 0.4s;
+    }
+    .has-about:hover .about-panel, .has-about:focus-within .about-panel, .has-about.open .about-panel {
+      opacity: 1; visibility: visible; transform: none;
+      border-radius: 34px;                                 /* …y se acomoda en un cuadrado de bordes redondeados */
+      transition-delay: 0s;
+    }
+
+    /* Texto: cada línea sube y aparece con retraso */
+    .about-body { position: absolute; inset: 0; overflow-y: auto; padding: 2.2rem 2.3rem; scrollbar-width: none; -ms-overflow-style: none; }
+    .about-body::-webkit-scrollbar { display: none; }
+    .about-body > * {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .has-about:hover .about-body > *, .has-about:focus-within .about-body > *, .has-about.open .about-body > * {
+      opacity: 1; transform: none;
+      transition: opacity 0.4s ease calc(0.12s + var(--i) * 0.06s), transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.12s + var(--i) * 0.06s);
+    }
+    .about-panel h2 { font-family: var(--font-title); font-style: italic; font-weight: 400; font-size: 1.6rem; color: #FFFFFF; margin-bottom: 0.2rem; }
+    .about-panel .kicker { display: block; font-size: 0.78rem; letter-spacing: 0.06em; opacity: 0.75; margin-bottom: 0.9rem; }
+    .about-panel p { font-size: 0.8rem; line-height: 1.6; font-weight: 400; margin-bottom: 0.8rem; }
+    .about-panel p:last-child { margin-bottom: 0; }
+    .about-panel strong { font-weight: 700; }
+    .about-more {
+      display: inline-flex;
+      margin-top: 1.1rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      background: #FFFFFF;
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .about-more { text-transform: none; letter-spacing: 0; }
+    .about-more:hover { background: #E8786D; transform: translateX(4px); }
+    @media (max-width: 600px) { .about-panel { aspect-ratio: auto; height: min(78vh, 600px); } .about-body { padding: 1.6rem 1.4rem; } }
+
+    /* Texto permanente + info del programa (debajo de la frase grande) */
+    .hero-intro .hint { margin-top: 1.4rem; font-size: 0.85rem; letter-spacing: 0.02em; color: var(--color-primary); opacity: 0.85; }
+    .tool-info { margin-top: 1.2rem; max-width: 380px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .tool-info.show { opacity: 1; transform: none; }
+    /* Nombre del programa en una pill sobre el ícono (no gira con él: la mueve el script) */
+    .tool-pill { position: absolute; top: 0; left: 0; z-index: 120; padding: .38rem .9rem; border-radius: 999px; background: var(--color-primary); color: #fff; font-size: .78rem; font-weight: 600; letter-spacing: .02em; white-space: nowrap; box-shadow: 0 8px 20px rgba(0,0,0,.22); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+    .tool-pill.show { opacity: 1; }
+    .tool-info b { display: block; font-family: var(--font-title); font-style: italic; font-weight: 700; font-size: 1.35rem; color: var(--color-primary); margin-bottom: 0.4rem; }
+    .tool-info p { font-size: 0.85rem; line-height: 1.55; color: var(--color-text); opacity: 0.8; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .expander { transition-duration: 0.01s; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVEGACIÓN -->
+  <header>
+    <div class="brand">
+      <span class="logo">Melaza Studio</span>
+      <span class="tagline">Estudio creativo</span>
+    </div>
+    <nav>
+      <ul>
+        <li class="has-about">
+          <a href="sobre-mi.html" id="about-btn" aria-haspopup="true" aria-expanded="false">Sobre mí</a>
+          <div class="about-panel" id="sobre-mi-panel" role="region" aria-label="Sobre mí">
+            <div class="about-body">
+              <h2 style="--i:0">Sobre mí</h2>
+              <span class="kicker" style="--i:1">El primer boceto</span>
+              <p style="--i:2">Los orígenes de Melaza Studio se remontan a <strong>diez años atrás</strong>, cuando una <strong>Meli de 11 años</strong> decidió aprender a usar <strong>Photoshop</strong> por su cuenta para hacer dibujos de su juego favorito, <strong>Five Nights at Freddy's</strong>. Una tableta Wacom Intuos y diez años más tarde, nace Melaza: <strong>un estudio creativo de diseño nutrido por múltiples disciplinas artísticas</strong>.</p>
+              <p style="--i:3">Melaza es el lugar al que acudir cuando buscás <strong>un enfoque fuera de lo común</strong>. Un espacio donde <strong>el diseño digital se encuentra con el arte</strong>, el dibujo, la costura y todas esas formas de crear que construyen a una artista. Porque creemos que <strong>un producto no nace únicamente en una pantalla</strong>, sino que puede partir de lo material, lo físico y todo aquello artístico para convertirse en <strong>algo único</strong>.</p>
+              <p style="--i:4">En Melaza Studio no te llevás solamente un producto o un resultado final. Te llevás <strong>un concepto, una identidad y una visión creativa</strong> que trascienden lo digital para construir <strong>una marca con personalidad propia</strong>, capaz de existir mucho más allá de una pantalla.</p>
+              <a class="about-more" href="sobre-mi.html" style="--i:5">Saber más →</a>
+            </div>
+          </div>
+        </li>
+        <li><a href="contacto.html">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- FRASE -->
+  <div class="hero-intro">
+    <h1>"la mirada de una<br><strong>diseñadora</strong> y las<br>manos de una <strong>artista</strong>"</h1>
+    <p class="hint" id="hint">Click sobre una pelota para entrar al proyecto · arrastrá para moverla</p>
+    <div class="tool-info" id="tool-info" aria-live="polite"><b></b><p></p></div>
+  </div>
+
+  <!-- CONTENEDOR DE ELEMENTOS FÍSICOS -->
+  <img class="bg-hand" id="bg-hand" alt="" aria-hidden="true" decoding="async">
+  <div id="physics-container"></div>
+  <script>
+    // Mano de fondo aleatoria: una distinta en cada carga
+    (function () {
+      const h = document.getElementById('bg-hand'); if (!h) return;
+      const MANOS = [1, 2, 3, 4, 5, 6, 7, 9];                         // (el puño chico, mano-8, se sacó del compilado)
+      const n = MANOS[Math.floor(Math.random() * MANOS.length)];
+      h.onload = () => requestAnimationFrame(() => h.classList.add('on'));
+      h.src = 'assets/mano-' + n + '.png';
+    })();
+  </script>
+
+  <!-- Datos compartidos: PROJECTS, TOOLS, sizeFactor() -->
+  <script src="proyectos.js"></script>
+  <script src="argentina-contenido.js"></script>
+  <script src="petstar-contenido.js"></script>
+  <script src="bebemi-contenido.js"></script>
+  <script src="dm-contenido.js"></script>
+  <script src="dual-contenido.js"></script>
+  <script src="proyectos-final.js"></script>
+
+  <!-- ==========================================================================
+     6. SIMULACIÓN FÍSICA, INTERACCIÓN Y TRANSICIÓN
+     ========================================================================== -->
+  <script>
+    /* Íconos de herramientas que caen junto a las pelotas */
+    const TOOL_KEYS = ['indesign', 'lightroom', 'photoshop', 'figma', 'aftereffects', 'illustrator', 'blender'];
+    const TOOL_ICONS = TOOL_KEYS.map(key => TOOLS[key]);      // solo se arrastran y muestran su nombre (no abren proyectos)
+
+    const { Engine, Bodies, Body, Composite } = Matter;
+
+    /* Anti-temblor: enableSleeping hace que una pelota ya apoyada y quieta "duerma" (sin gravedad ni correcciones de contacto, que era lo que vibraba)
+       y despierte sola si algo la golpea, la arrastrás o cambia el tamaño de la ventana. El resto de la física no cambia. */
+    const engine = Engine.create({ enableSleeping: true });
+    engine.world.gravity.y = 1.2;
+
+    const container = document.getElementById('physics-container');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    // Paredes contenedoras
+    const wallThick = 500;
+    const wallOptions = { isStatic: true, restitution: 0.2, friction: 0.5 };
+
+    let ground = Bodies.rectangle(width / 2, height + wallThick / 2, width * 3, wallThick, wallOptions);
+    let leftWall = Bodies.rectangle(-wallThick / 2, height / 2, wallThick, height * 3, wallOptions);
+    let rightWall = Bodies.rectangle(width + wallThick / 2, height / 2, wallThick, height * 3, wallOptions);
+    let ceiling = Bodies.rectangle(width / 2, -wallThick / 2, width * 3, wallThick, wallOptions);
+
+    Composite.add(engine.world, [ground, leftWall, rightWall, ceiling]);
+
+    const physicsObjects = [];
+
+    // Cálculo de tamaños base
+    const baseDiameter = (width < 768 ? 80 : 137) * 1.15;   // Pelota más chica (la 1)
+    const iconSizeBase = baseDiameter * 0.80 * 0.70;   // Íconos: 20% menos que la pelota 1, y otro 30% menos
+
+    /* ----------------------------------------------------------------------
+       Información en hover (mouse) / un toque (táctil)
+       ---------------------------------------------------------------------- */
+    const toolInfo = document.getElementById('tool-info');
+    const toolPill = document.createElement('div'); toolPill.className = 'tool-pill'; toolPill.setAttribute('aria-hidden', 'true'); container.appendChild(toolPill);
+    let pillObj = null;
+    function placePill() {                                  // la pill acompaña al ícono mientras cae o se arrastra, sin salirse de la pantalla
+      if (!pillObj) return;
+      const w = toolPill.offsetWidth, h = toolPill.offsetHeight, b = pillObj.body.position;
+      const x = Math.max(8, Math.min(width - w - 8, b.x - w / 2)), y = Math.max(8, b.y - pillObj.halfHeight - h - 10);
+      toolPill.style.transform = `translate(${x}px, ${y}px)`;
+    }
+    let previewObj = null;
+    let previewTimer = null;
+    if (matchMedia('(hover: none)').matches) document.getElementById('hint').textContent = 'Doble toque sobre una pelota para entrar al proyecto';
+
+    // Pelotas de proyecto: el título va DENTRO del círculo (clase show-info)
+    function clearInfo() { document.querySelectorAll('.show-info').forEach(el => el.classList.remove('show-info')); }
+
+    // Íconos de programas: nombre + breve texto debajo de la frase grande
+    function showPreview(obj, sticky) {
+      clearInfo();
+      previewObj = obj;
+      if (obj.tool) {
+        pillObj = obj; toolPill.textContent = obj.tool.name; toolPill.classList.add('show'); placePill();
+        toolInfo.querySelector('b').textContent = obj.tool.name;
+        toolInfo.querySelector('p').textContent = obj.tool.blurb || '';
+        toolInfo.classList.add('show');
+      } else {
+        pillObj = null; toolPill.classList.remove('show');
+        toolInfo.classList.remove('show');
+        obj.elem.classList.add('show-info');
+      }
+      clearTimeout(previewTimer);
+      if (!sticky) previewTimer = setTimeout(hidePreview, 2800);
+    }
+
+    function hidePreview() {
+      pillObj = null; toolPill.classList.remove('show');
+      clearInfo();
+      previewObj = null;
+      toolInfo.classList.remove('show');
+    }
+
+    // Tocar el fondo oculta la vista previa
+    document.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.physics-node')) hidePreview();
+    });
+
+    /* ----------------------------------------------------------------------
+       Click en una pelota: el círculo crece (clip-path) hasta cubrir la pantalla
+       en rojo y luego se abre la página del trabajo.
+       ---------------------------------------------------------------------- */
+    let opening = false;
+
+    function openProject(obj) {
+      if (opening) return;
+      opening = true;
+      hidePreview();
+
+      const { x, y } = obj.body.position;
+      const r = obj.halfWidth;
+      // Radio necesario para llegar a la esquina más lejana
+      const maxR = Math.hypot(Math.max(x, width - x), Math.max(y, height - y));
+
+      const expander = document.createElement('div');
+      expander.className = 'expander';
+      expander.style.clipPath = `circle(${r}px at ${x}px ${y}px)`;
+      document.body.appendChild(expander);
+
+      void expander.offsetWidth; // fuerza el reflow para que la transición arranque
+      expander.style.clipPath = `circle(${maxR + 2}px at ${x}px ${y}px)`;
+
+      let done = false;
+      const go = () => {
+        if (done) return;
+        done = true;
+        window.location.href = obj.project.url;
+      };
+      expander.addEventListener('transitionend', go);
+      setTimeout(go, 1200); // respaldo
+    }
+
+    // Al volver con el botón "atrás" se limpia la transición
+    window.addEventListener('pageshow', () => {
+      document.querySelectorAll('.expander').forEach(el => el.remove());
+      opening = false;
+    });
+
+    /* ----------------------------------------------------------------------
+       Arrastre + detección de toque (mouse: un click entra · táctil: un toque muestra la info y dos entran)
+       ---------------------------------------------------------------------- */
+    let lastTap = { obj: null, time: 0 };
+
+    function makeTapHandler(obj) {
+      return () => {
+        const now = performance.now();
+        if (obj.tool) { if (obj.ptype === 'touch') showPreview(obj); return; }   // los programas no abren proyectos: solo se arrastran (y muestran su nombre)
+        if (obj.ptype !== 'touch') { openProject(obj); return; }   // mouse: un click sin arrastrar = entrar (arrastrar = mover)
+        if (lastTap.obj === obj && now - lastTap.time < 380) {
+          openProject(obj);
+        } else if (!obj.hover) {
+          showPreview(obj);                 // en táctil: un toque muestra la info
+        }
+        lastTap = { obj, time: now };
+      };
+    }
+
+    function setupDrag(elem, body, obj, onTap) {
+      const th = makeThrow();
+      let startX = 0, startY = 0, startT = 0, moved = false;
+
+      const onPointerDown = (e) => {
+        obj.ptype = e.pointerType;
+        obj.isDragging = true;
+        elem.classList.add('is-dragging');
+        elem.setPointerCapture(e.pointerId);
+
+        startX = e.clientX;
+        startY = e.clientY;
+        startT = performance.now();
+        moved = false;
+        th.reset(e.clientX, e.clientY, startT);
+
+        physicsObjects.forEach(o => Matter.Sleeping.set(o.body, false));   // si se saca el apoyo de otras, que caigan
+        Body.setStatic(body, true);
+      };
+
+      const onPointerMove = (e) => {
+        if (!obj.isDragging) return;
+
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 6) moved = true;
+
+        const halfW = obj.halfWidth;
+        const halfH = obj.halfHeight;
+
+        const clampedX = Math.max(halfW, Math.min(width - halfW, e.clientX));
+        const clampedY = Math.max(halfH, Math.min(height - halfH, e.clientY));
+
+        Body.setPosition(body, { x: clampedX, y: clampedY });
+
+        th.add(clampedX, clampedY, performance.now());
+      };
+
+      const onPointerUp = (e) => {
+        if (!obj.isDragging) return;
+        obj.isDragging = false;
+        elem.classList.remove('is-dragging');
+
+        Body.setStatic(body, false);
+        physicsObjects.forEach(o => Matter.Sleeping.set(o.body, false));
+        Body.setVelocity(body, th.vel(performance.now()));
+
+        // Un toque corto sin arrastre cuenta como clic
+        if (onTap && e.type === 'pointerup' && !moved && performance.now() - startT < 500) {
+          onTap();
+        }
+      };
+
+      // Hover (mouse): la info aparece por encima mientras el puntero está sobre el círculo
+      elem.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { obj.hover = true; showPreview(obj, true); } });
+      elem.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { obj.hover = false; if (previewObj === obj) hidePreview(); } });
+
+      elem.addEventListener('pointerdown', onPointerDown);
+      elem.addEventListener('pointermove', onPointerMove);
+      elem.addEventListener('pointerup', onPointerUp);
+      elem.addEventListener('pointercancel', onPointerUp);
+    }
+
+    /* ----------------------------------------------------------------------
+       1. CREACIÓN DE CÍRCULOS (PROYECTOS)
+       Tamaños repartidos de forma exponencial entre la pelota más chica y la
+       más grande (sizeFactor en proyectos.js).
+       ---------------------------------------------------------------------- */
+    PROJECTS.forEach((proj, index) => {
+      const diameter = baseDiameter * sizeFactor(proj.sizeIndex, proj.sizeTotal);   // conserva el tamaño original
+      const baseRadius = diameter / 2;
+
+      // Salida escalonada para que no nazcan todas superpuestas
+      const startX = baseRadius + (width - diameter) * (index / Math.max(1, PROJECTS.length - 1));
+      const startY = baseRadius + 10 + (index % 3) * 30;
+
+      const elem = document.createElement('div');
+      elem.className = `physics-node circle-node node-size-${proj.id}${proj.cover ? ' has-img' : ''}`;
+      elem.style.width = `${diameter}px`;
+      elem.style.height = `${diameter}px`;
+
+      elem.innerHTML = `
+        <span class="pimg">${proj.cover
+          ? `<img src="${proj.cover}" alt="">`
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.7"/><path d="M4 18l5.5-5.5 4 4 2.5-2.5L21 18"/></svg>'}</span>
+        <span class="pinfo"><i>${proj.name}</i></span>
+      `;
+      container.appendChild(elem);
+
+      const body = Bodies.circle(startX, startY, baseRadius, {
+        restitution: 0.25,
+        friction: 0.2,
+        density: 0.002
+      });
+
+      Composite.add(engine.world, body);
+
+      const obj = { elem, body, project: proj, halfWidth: baseRadius, halfHeight: baseRadius, isDragging: false };
+      physicsObjects.push(obj);
+
+      setupDrag(elem, body, obj, makeTapHandler(obj));
+    });
+
+    /* ----------------------------------------------------------------------
+       2. CREACIÓN DE ÍCONOS DE PROGRAMAS
+       ---------------------------------------------------------------------- */
+    TOOL_ICONS.forEach((icon, index) => {
+      const iconSize = iconSizeBase * 0.7;
+      // Salida escalonada a lo ancho para que no nazcan todos superpuestos
+      const startX = iconSize / 2 + (width - iconSize) * (index / Math.max(1, TOOL_ICONS.length - 1));
+      const startY = 40 + (index % 4) * 14;
+
+      const elem = document.createElement('div');
+      elem.className = 'physics-node icon-node';
+      elem.style.width = `${iconSize}px`;
+      elem.style.height = `${iconSize}px`;
+      elem.style.backgroundImage = `url('${icon.image}')`;
+
+      container.appendChild(elem);
+
+      const body = Bodies.rectangle(startX, startY, iconSize, iconSize, {
+        chamfer: { radius: iconSize * 0.22 },
+        restitution: 0.25,
+        friction: 0.2,
+        density: 0.002
+      });
+
+      Composite.add(engine.world, body);
+
+      const obj = { elem, body, tool: icon, halfWidth: iconSize / 2, halfHeight: iconSize / 2, isDragging: false };
+      physicsObjects.push(obj);
+
+      setupDrag(elem, body, obj, makeTapHandler(obj));
+    });
+
+    // Sobre mí: con mouse se abre al pasar el cursor (CSS); en táctil, un toque abre/cierra
+    const aboutLi = document.querySelector('.has-about');
+    const aboutBtn = document.getElementById('about-btn');
+    aboutBtn.addEventListener('click', (e) => {
+      if (!matchMedia('(hover: none)').matches) return;     // con mouse: el clic lleva a la página "Sobre mí"
+      e.preventDefault();                                   // en táctil: un toque abre el panel (ahí está "Saber más")
+      const open = !aboutLi.classList.contains('open');
+      aboutLi.classList.toggle('open', open);
+      aboutBtn.setAttribute('aria-expanded', String(open));
+      if (open) hidePreview();
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.has-about')) { aboutLi.classList.remove('open'); aboutBtn.setAttribute('aria-expanded', 'false'); }
+    });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { aboutLi.classList.remove('open'); aboutBtn.blur(); } });
+
+    // Bucle de animación
+    const calm = makeCalm(engine, () => physicsObjects.filter(o => !o.isDragging).map(o => o.body));
+    const step = makeStepper(engine, calm);
+    function render(now) {
+      step(now || performance.now());
+      placePill();
+
+      physicsObjects.forEach(obj => {
+        let posX = Math.max(obj.halfWidth, Math.min(width - obj.halfWidth, obj.body.position.x));
+        let posY = Math.max(obj.halfHeight, Math.min(height - obj.halfHeight, obj.body.position.y));
+
+        // Solo se corrige si se pasó claramente del borde: corregir los décimas de píxel de la penetración normal contra el piso hacía vibrar a las pelotas apoyadas
+        if (Math.abs(posX - obj.body.position.x) > 3 || Math.abs(posY - obj.body.position.y) > 3) {
+          Body.setPosition(obj.body, { x: posX, y: posY });
+        }
+
+        const angle = obj.body.angle;
+        const tf = `translate(${posX - obj.halfWidth}px, ${posY - obj.halfHeight}px) rotate(${angle}rad)`;
+        if (obj._tf !== tf) { obj._tf = tf; obj.elem.style.transform = tf; }   // los cuerpos dormidos no tocan el DOM
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      Body.setPosition(ground, { x: width / 2, y: height + wallThick / 2 });
+      Body.setPosition(leftWall, { x: -wallThick / 2, y: height / 2 });
+      Body.setPosition(rightWall, { x: width + wallThick / 2, y: height / 2 });
+      Body.setPosition(ceiling, { x: width / 2, y: -wallThick / 2 });
+      physicsObjects.forEach(o => Matter.Sleeping.set(o.body, false));
+    });
+  </script>
+</body>
+</html>
